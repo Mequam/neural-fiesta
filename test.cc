@@ -20,5 +20,14 @@ int main()
 		std::cout << cn.LayerList[1][i].cons[0].weight << ',' <<
 		cn.LayerList[1][i].cons[1].weight << std::endl;
 	}
+	
+
+	//testing to make sure that the neurons calculate their activation properly
+	args = {1,2};
+	cn = NNet::ConvNetwork(args);
+	cn.LayerList[0][0].activation = 2;
+	cn.run(std::vector<double>{.5});	
+	
+	std::cout << "[main] the activation of the first neuron in the second layer is: " << cn.LayerList[1][0].activation << std::endl;
 	return 0;
 }
