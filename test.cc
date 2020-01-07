@@ -40,6 +40,9 @@ int main()
 	std::cout << "[test] the cost of the network with respect to td {0}->{1,1} is " << cn.cost(td1) << std::endl;
 	std::cout << "[test] the cost of the network with respect to td {1}->{0,0} is " << cn.cost(td2) << std::endl;	
 	
-	std::cout << "[test] the true cost of the network with respect to {0}->{1,1} and {1}->{0,0} is " << cn.trueCost(std::vector<NNet::training_data>{td1,td2}) << std::endl;	
+	std::cout << "[test] the true cost of the network with respect to {0}->{1,1} and {1}->{0,0} is " << cn.trueCost(std::vector<NNet::training_data>{td1,td2}) << std::endl;
+	std::cout << "[test] the current network ({1,2}) has " << cn.weight_size() << " weights" << std::endl;
+	cn = NNet::ConvNetwork({1,2,3});
+	std::cout << "[test] a network of {1,2,3} has " << cn.weight_size() << " weights" << std::endl;
 	return 0;
 }

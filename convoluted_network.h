@@ -20,7 +20,19 @@ namespace NNet {
 		double cost(std::vector<double>); //calculate the cost of the network with the current output neurons FOR A SINGLE VALUE	
 		double cost(training_data); //use the training data to set the network before calculating the cost
 		double trueCost(std::vector<training_data>); //average the cost of multiple training examples together to create the true cost 
+		int weight_size(); //returns how many weights are in the network
 	};
+	int ConvNetwork::weight_size()
+	{
+		int ret_val = 0;
+		//iterate backwards over the layers in the network to more easily align with backpropigation ordering	
+		int max = this->LayerList.size()-1;
+		for (int i = 0; i < max;i++)
+		{
+			ret_val+=LayerList[i].size()*LayerList[i+1].size();
+		}
+		return ret_val;
+	}
 	double ConvNetwork::trueCost(std::vector<training_data> td)
 	{
 		int size = td.size();
