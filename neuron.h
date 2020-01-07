@@ -4,6 +4,10 @@ namespace NNet {
 	double sigmoid(double x){
 		//TODO: we need to make a jaged version of this function for speed
 		return 1/(1+pow(M_E,-x));
+	}
+	double dsig(double x)
+	{
+		return sigmoid(x)*(1-sigmoid(x));
 	}	
 	struct neuron;
 	struct connection
@@ -28,6 +32,9 @@ namespace NNet {
 		void calc(){
 			//simple wrapper function to set the activation of this neuron
 			this->activation=sigmoid(this->getAct());
-		}	
+		}
+		double ndsig(){
+			return dsig(this->getAct());
+		}
 	};
 }

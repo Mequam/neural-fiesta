@@ -1,4 +1,5 @@
 #include <vector>
+#include <iostream>
 #include "neuron.h"
 namespace NNet {
 	struct training_data
@@ -8,8 +9,7 @@ namespace NNet {
 	};
 	class ConvNetwork 
 	{
-
-		
+	
 		public:	
 		std::vector<std::vector<neuron>> LayerList;		
 		//this initilizer takes a list of comma seperated layer sizes and generates a neuron to match the criteria
@@ -21,7 +21,33 @@ namespace NNet {
 		double cost(training_data); //use the training data to set the network before calculating the cost
 		double trueCost(std::vector<training_data>); //average the cost of multiple training examples together to create the true cost 
 		int weight_size(); //returns how many weights are in the network
+		
+		//this funtion performs backpropigation between two layers in the network 
+		void backprop(std::vector<neuron> ls,std::vector<neuron> lf,std::vector<double> lf_derivative,int * weight_offset, std::vector<double> * weights); 
 	};
+	void ConvNetwork::backprop(std::vector<neuron> ls,std::vector<neuron> lf,std::vector<double> lf_derivative, int * weight_offset,std::vector<double> * weights)
+	{
+		std::cout << "[convNet] running backpropigation *^*" << std::endl;
+		int lf_size = lf.size();
+		//store how many weights each entry of the first neurons will have
+		int weight_size = ls.size();
+		std::cout << "[convNet] the size of the first layer is " << lf.size() << std::endl;
+		for (int i = 0; i < lf.size();i++)
+		{
+			//store the derivative of the sigmoid function for the neuron that we are looking at
+			double nf_dsig = lf[i].ndsig();
+			std::cout << "[convNet] ndsig " << nf_dsig << std::endl;
+			std::cout << "[convNet] lf_derivative[" << i << "]:" << lf_derivative[i] << std::endl;	
+			for (int j = 0; j < weight_size; j++)
+			{
+				
+				std::cout << "[convNet] previous activation: " << lf[i].cons[j].np->activation << std::endl;	
+				//add the way that we want to nudge the wieght to the wieght total
+				(*weights)[(*weight_offset)] += lf[i].cons[j].np->activation*nf_dsig*lf_derivative[i];
+				(*weight_offset)++;
+			}
+		}	
+	}
 	int ConvNetwork::weight_size()
 	{
 		int ret_val = 0;
@@ -81,7 +107,7 @@ namespace NNet {
 		int layer_size = this->LayerList[0].size();
 		for (int i = 0; i < given_size && i < layer_size;i++)
 		{
-			this->LayerList[0][i].activation = sigmoid(nL[i]); 
+			this->LayerList[0][i].activation = nL[i]; 
 		}
 
 		//update all of the other neurons

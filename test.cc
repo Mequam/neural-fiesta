@@ -44,5 +44,37 @@ int main()
 	std::cout << "[test] the current network ({1,2}) has " << cn.weight_size() << " weights" << std::endl;
 	cn = NNet::ConvNetwork({1,2,3});
 	std::cout << "[test] a network of {1,2,3} has " << cn.weight_size() << " weights" << std::endl;
-	return 0;
+//begin backpropigation tests
+	std::cout << std::endl << "[test] BEGINING BACKPROP TESTS!!!" << std::endl; 
+	//set up the new network
+	cn = NNet::ConvNetwork({1,2});
+	//run it with the given input value
+	cn.run(td2.input_value);
+	std::cout << "{{" << cn.LayerList[0][0].activation << "},{" << cn.LayerList[1][0].activation << "," << cn.LayerList[1][1].activation << "}}" << std::endl;
+	std::cout << "w0:" << cn.LayerList[1][0].cons[0].weight << " w1:" << cn.LayerList[1][1].cons[0].weight << std::endl;
+	//create a list of the derivatives of the output layer functions to that value
+	std::vector<double> derivO(cn.LayerList[cn.LayerList.size()-1].size());
+	for (int i = 0; i < cn.LayerList[cn.LayerList.size()-1].size(); i++)
+	{
+		derivO[i] = 2*(cn.LayerList[cn.LayerList.size()-1][i].activation-td2.wanted_output[i]);
+	}
+
+	//allocate memory for the weights
+	std::vector<double> weight_mem(cn.weight_size());
+	std::cout << "there are " << weight_mem.size() << " weights" << std::endl;
+	int weight_offset = 0;
+
+	//run the backpropigation function for that layer 	
+	cn.backprop(cn.LayerList[0],cn.LayerList[1],derivO,&weight_offset,&weight_mem);
+	
+	
+	for (int i = 0; i < weight_mem.size();i++)
+	{
+		std::cout << "[test] weight " << i << " had a derivitive of " << weight_mem[i] << std::endl;
+	}
+
+
+
+
+return 0;
 }
