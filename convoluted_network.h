@@ -1,17 +1,54 @@
 #include <vector>
 #include "neuron.h"
 namespace NNet {
+	struct training_data
+	{
+		std::vector <double> input_value;
+		std::vector <double> wanted_output; 
+	};
 	class ConvNetwork 
 	{
 
-		public:
-		std::vector<std::vector<neuron>> LayerList;	
+		
+		public:	
+		std::vector<std::vector<neuron>> LayerList;		
 		//this initilizer takes a list of comma seperated layer sizes and generates a neuron to match the criteria
 		ConvNetwork(std::vector<int>);
 		//this function sets the activation for each neuron in the network that is not the starting neurons
 		void run(std::vector<double>); //set the initial starting neurons activation to the doubles in this vector 
 		void run();//run with the current activations stored in the starting neurons
+		double cost(std::vector<double>); //calculate the cost of the network with the current output neurons FOR A SINGLE VALUE	
+		double cost(training_data); //use the training data to set the network before calculating the cost
+		double trueCost(std::vector<training_data>); //average the cost of multiple training examples together to create the true cost 
 	};
+	double ConvNetwork::trueCost(std::vector<training_data> td)
+	{
+		int size = td.size();
+		double avg = 0;
+		for (int i = 0; i < size; i++)
+		{
+			this->run(td[i].input_value);
+			avg += this->cost(td[i].wanted_output);
+		}
+		return avg/size;
+	}
+	double ConvNetwork::cost(std::vector<double> goals)
+	{
+		double sum = 0;
+		//TODO: perhaps save this size value somewhere in the object so it does not need to be computed every cost function?
+		int last_index = this->LayerList.size()-1;
+		int size = this->LayerList[last_index].size();
+		for (int i = 0; i < size; i++)
+		{
+			sum += (this->LayerList[last_index][i].activation-goals[i])*(this->LayerList[last_index][i].activation-goals[i]);
+		}
+		return sum;
+	}
+	double ConvNetwork::cost(training_data td)
+	{
+		this->run(td.input_value);
+		return this->cost(td.wanted_output);
+	}
 	void ConvNetwork::run()
 	{
 		int size = this->LayerList.size();
