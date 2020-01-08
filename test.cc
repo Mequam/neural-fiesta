@@ -69,8 +69,11 @@ int main()
 	std::cout << "[test] initilized " << bias_mem.size() << " bias memory" << std::endl;
 	int bias_offset = 0; //set the offset into the biases to zero
 	
+	//allocate memory for the derivatives of the next layers to be derivatives	
+	std::vector<double> derivative_mem(cn.LayerList[0].size());
+
 	//run the backpropigation function for that layer 	
-	cn.backprop(cn.LayerList[0],cn.LayerList[1],derivO,&weight_offset,&weight_mem,&bias_offset,&bias_mem);
+	cn.backprop(cn.LayerList[0],cn.LayerList[1],derivO,&weight_offset,&weight_mem,&bias_offset,&bias_mem,&derivative_mem);
 	
 	
 	for (int i = 0; i < weight_mem.size();i++)
@@ -82,6 +85,10 @@ int main()
 	{
 		std::cout << "[test] bias " << i <<  " had a derivitive of " << weight_mem[i] << std::endl;
 	}
-
+	
+	for (int i = 0; i < derivative_mem.size();i++)
+	{
+		std::cout << "[test] the derivatives for the second layer are " << derivative_mem[i] << std::endl;
+	}
 return 0;
 }

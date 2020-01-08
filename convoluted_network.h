@@ -22,8 +22,12 @@ namespace NNet {
 		double trueCost(std::vector<training_data>); //average the cost of multiple training examples together to create the true cost 
 		int weight_size(); //returns how many weights are in the network
 		int neuron_count(); //returns a count of how many neurons are in the network		
+		
 		//this funtion performs backpropigation between two layers in the network 
-		void backprop(std::vector<neuron> ls,std::vector<neuron> lf,std::vector<double> lf_derivative,int * weight_offset, std::vector<double> * weights,int *bias_offset,std::vector<double> * biases); 
+		void backprop(std::vector<neuron> ls,std::vector<neuron> lf,
+			std::vector<double> lf_derivative,int * weight_offset, 
+			std::vector<double> * weights,int *bias_offset,std::vector<double> * biases,
+			std::vector<double> * next_l_dervative); 
 	};
 	int ConvNetwork::neuron_count()
 	{
@@ -38,14 +42,15 @@ namespace NNet {
 	void ConvNetwork::backprop(
 	std::vector<neuron> ls,std::vector<neuron> lf,std::vector<double> lf_derivative,
 	int * weight_offset, std::vector<double> * weights,
-	int *bias_offset,std::vector<double> * biases)
+	int *bias_offset,std::vector<double> * biases,
+	std::vector<double>* next_l_derivative)
 	{
 		std::cout << "[convNet] running backpropigation *^*" << std::endl;
 		int lf_size = lf.size();
 		//store how many weights each entry of the first neurons will have
 		int weight_size = ls.size();
 		std::cout << "[convNet] the size of the first layer is " << lf.size() << std::endl;
-		for (int i = 0; i < lf.size();i++)
+		for (int i = 0; i < lf_size;i++)
 		{
 			//store the derivative of the sigmoid function for the neuron that we are looking at
 			double nf_constants = lf[i].ndsig()*lf_derivative[i];
@@ -58,7 +63,16 @@ namespace NNet {
 				(*weights)[(*weight_offset)] += lf[i].cons[j].np->activation*nf_constants;
 				(*weight_offset)++;//any time that we add to how we want a weight moved, incriment our focus to the next weight
 			}
-		}	
+		}
+		//iterate through the previous list and compute the derivative
+		for (int i = 0; i < weight_size; i++)
+		{
+			double nl_constants = lf[0].cons[i].np->ndsig();
+			for (int j = 0; j < lf_size; j++)
+			{
+				(*next_l_derivative)[i] += lf[j].cons[i].weight*nl_constants*lf_derivative[j];
+			}
+		}
 	}
 	int ConvNetwork::weight_size()
 	{
