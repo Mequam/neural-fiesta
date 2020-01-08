@@ -21,11 +21,24 @@ namespace NNet {
 		double cost(training_data); //use the training data to set the network before calculating the cost
 		double trueCost(std::vector<training_data>); //average the cost of multiple training examples together to create the true cost 
 		int weight_size(); //returns how many weights are in the network
-		
+		int neuron_count(); //returns a count of how many neurons are in the network		
 		//this funtion performs backpropigation between two layers in the network 
-		void backprop(std::vector<neuron> ls,std::vector<neuron> lf,std::vector<double> lf_derivative,int * weight_offset, std::vector<double> * weights); 
+		void backprop(std::vector<neuron> ls,std::vector<neuron> lf,std::vector<double> lf_derivative,int * weight_offset, std::vector<double> * weights,int *bias_offset,std::vector<double> * biases); 
 	};
-	void ConvNetwork::backprop(std::vector<neuron> ls,std::vector<neuron> lf,std::vector<double> lf_derivative, int * weight_offset,std::vector<double> * weights)
+	int ConvNetwork::neuron_count()
+	{
+		int ret_val = 0;
+		int size = this->LayerList.size();
+		for (int i = 0; i < size; i++)
+		{
+			ret_val+=this->LayerList[i].size();
+		}
+		return ret_val;
+	}
+	void ConvNetwork::backprop(
+	std::vector<neuron> ls,std::vector<neuron> lf,std::vector<double> lf_derivative,
+	int * weight_offset, std::vector<double> * weights,
+	int *bias_offset,std::vector<double> * biases)
 	{
 		std::cout << "[convNet] running backpropigation *^*" << std::endl;
 		int lf_size = lf.size();
@@ -35,16 +48,15 @@ namespace NNet {
 		for (int i = 0; i < lf.size();i++)
 		{
 			//store the derivative of the sigmoid function for the neuron that we are looking at
-			double nf_dsig = lf[i].ndsig();
-			std::cout << "[convNet] ndsig " << nf_dsig << std::endl;
-			std::cout << "[convNet] lf_derivative[" << i << "]:" << lf_derivative[i] << std::endl;	
+			double nf_constants = lf[i].ndsig()*lf_derivative[i];
+			(*biases)[i] = nf_constants; //the derivitive of the bias does not care about the weights
+			(*bias_offset)++; //any time we set a bias, imidiatly move to the next bias in the list
 			for (int j = 0; j < weight_size; j++)
-			{
-				
+			{	
 				std::cout << "[convNet] previous activation: " << lf[i].cons[j].np->activation << std::endl;	
 				//add the way that we want to nudge the wieght to the wieght total
-				(*weights)[(*weight_offset)] += lf[i].cons[j].np->activation*nf_dsig*lf_derivative[i];
-				(*weight_offset)++;
+				(*weights)[(*weight_offset)] += lf[i].cons[j].np->activation*nf_constants;
+				(*weight_offset)++;//any time that we add to how we want a weight moved, incriment our focus to the next weight
 			}
 		}	
 	}

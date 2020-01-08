@@ -61,20 +61,27 @@ int main()
 
 	//allocate memory for the weights
 	std::vector<double> weight_mem(cn.weight_size());
-	std::cout << "there are " << weight_mem.size() << " weights" << std::endl;
-	int weight_offset = 0;
-
+	std::cout << "[test] initilized " << weight_mem.size() << " weight memory locations" << std::endl;
+	int weight_offset = 0; //set the offset into that memory chunk to zero
+	
+	//allocate memory for the biases
+	std::vector<double> bias_mem(cn.neuron_count()-cn.LayerList[0].size());
+	std::cout << "[test] initilized " << bias_mem.size() << " bias memory" << std::endl;
+	int bias_offset = 0; //set the offset into the biases to zero
+	
 	//run the backpropigation function for that layer 	
-	cn.backprop(cn.LayerList[0],cn.LayerList[1],derivO,&weight_offset,&weight_mem);
+	cn.backprop(cn.LayerList[0],cn.LayerList[1],derivO,&weight_offset,&weight_mem,&bias_offset,&bias_mem);
 	
 	
 	for (int i = 0; i < weight_mem.size();i++)
 	{
 		std::cout << "[test] weight " << i << " had a derivitive of " << weight_mem[i] << std::endl;
 	}
-
-
-
+	std::cout << "[test] this network contains " << cn.neuron_count() << " neurons" << std::endl;
+	for (int i = 0; i < bias_mem.size(); i++)
+	{
+		std::cout << "[test] bias " << i <<  " had a derivitive of " << weight_mem[i] << std::endl;
+	}
 
 return 0;
 }
