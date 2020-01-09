@@ -47,7 +47,7 @@ int main()
 //begin backpropigation tests
 	std::cout << std::endl << "[test] BEGINING BACKPROP TESTS!!!" << std::endl; 
 	//set up the new network
-	cn = NNet::ConvNetwork({1,2});
+	cn = NNet::ConvNetwork({1,2,2});
 	//run it with the given input value
 	cn.run(td2.input_value);
 	std::cout << "{{" << cn.LayerList[0][0].activation << "},{" << cn.LayerList[1][0].activation << "," << cn.LayerList[1][1].activation << "}}" << std::endl;
@@ -70,10 +70,10 @@ int main()
 	int bias_offset = 0; //set the offset into the biases to zero
 	
 	//allocate memory for the derivatives of the next layers to be derivatives	
-	std::vector<double> derivative_mem(cn.LayerList[0].size());
+	std::vector<double> derivative_mem(cn.LayerList[1].size());
 
 	//run the backpropigation function for that layer 	
-	cn.backprop(cn.LayerList[0],cn.LayerList[1],derivO,&weight_offset,&weight_mem,&bias_offset,&bias_mem,&derivative_mem);
+	cn.backprop(cn.LayerList[1],cn.LayerList[2],derivO,&weight_offset,&weight_mem,&bias_offset,&bias_mem,&derivative_mem);
 	
 	
 	for (int i = 0; i < weight_mem.size();i++)
@@ -83,7 +83,7 @@ int main()
 	std::cout << "[test] this network contains " << cn.neuron_count() << " neurons" << std::endl;
 	for (int i = 0; i < bias_mem.size(); i++)
 	{
-		std::cout << "[test] bias " << i <<  " had a derivitive of " << weight_mem[i] << std::endl;
+		std::cout << "[test] bias " << i <<  " had a derivitive of " << bias_mem[i] << std::endl;
 	}
 	
 	for (int i = 0; i < derivative_mem.size();i++)

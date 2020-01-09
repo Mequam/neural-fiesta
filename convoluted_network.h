@@ -54,7 +54,8 @@ namespace NNet {
 		{
 			//store the derivative of the sigmoid function for the neuron that we are looking at
 			double nf_constants = lf[i].ndsig()*lf_derivative[i];
-			(*biases)[i] = nf_constants; //the derivitive of the bias does not care about the weights
+			std::cout << "[convNet] BIAS setting bias: " << *bias_offset << std::endl;
+			(*biases)[*bias_offset] = nf_constants; //the derivitive of the bias does not care about the weights
 			(*bias_offset)++; //any time we set a bias, imidiatly move to the next bias in the list
 			for (int j = 0; j < weight_size; j++)
 			{	
@@ -70,6 +71,8 @@ namespace NNet {
 			double nl_constants = lf[0].cons[i].np->ndsig();
 			for (int j = 0; j < lf_size; j++)
 			{
+				std::cout << "[convNet] checking second layer neuron " << i << " v first neuron " << j << std::endl;
+				std::cout << "[conNet] activation for sl n is:" << lf[0].cons[i].np->activation << " the activation for the fl n is: " << lf[j].activation << std::endl << std::endl;
 				(*next_l_derivative)[i] += lf[j].cons[i].weight*nl_constants*lf_derivative[j];
 			}
 		}
