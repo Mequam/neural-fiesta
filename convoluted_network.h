@@ -10,7 +10,9 @@ namespace NNet {
 	class ConvNetwork 
 	{
 	
+		int largest_layer;
 		public:	
+		int largest_layer();
 		std::vector<std::vector<neuron>> LayerList;		
 		//this initilizer takes a list of comma seperated layer sizes and generates a neuron to match the criteria
 		ConvNetwork(std::vector<int>);
@@ -27,8 +29,92 @@ namespace NNet {
 		void backprop(std::vector<neuron> ls,std::vector<neuron> lf,
 			std::vector<double> lf_derivative,int * weight_offset, 
 			std::vector<double> * weights,int *bias_offset,std::vector<double> * biases,
-			std::vector<double> * next_l_dervative); 
+			std::vector<double> * next_l_dervative);
+		//this function backpropigates the ENTIRE network
+		void full_backprop(std::vector<training_data>); 
 	};
+	void ConvNetwork::full_backprop(std::vector<training_data> data_set)
+	{
+		int data_size = data_set.size();
+		int layer_list_size = this->LayerList.size();
+		int first_layer_size = this->LayerList[layer_list_size-1].size();
+	//allocate memory that will be used to store how the weights need to be changed
+		std::vector<double> weight_mem(this->weight_size());
+		//this points to where inside of the weight memory that we are located
+		int weight_offset = 0;
+	//allocate memory that will be used to store how the biases need to be changed
+		std::vector<double> bias_mem(this->neuron_count() - this->LayerList[0].size());
+		int bias_offset = 0;
+		for (int i = 0; i < data_size; i++)
+		{
+			//foreach training example
+
+
+			//run the network with the current training data
+			this->run(data_set[i].input_value);
+			//create the first derivatives that will begin the chain of backpropigation
+			std::vector<double> derive_zero(first_layer_size);
+			//populate the above list with the initial derivative
+			for (int j = 0; j < first_layer_size; j++)
+			{
+				derive_zero[j] = 2*(this->LayerList[layer_list_size-1][j].activation - data_set[i].wanted_output[j]);
+			}
+			
+			for (int j = layer_list_size-1;j >= 1;j++)//do not run for the last layer, as they are the input neurons
+			{
+				
+				//possible TODO: make this use ONE vector that is large enough for every neuron inside of the network
+				//set up the memory that will be used for the next layer list
+				std::vector<double> derive_mem(this->LayerList[j-1].size());
+				
+				//start at the output layer and work our way to the input layer
+				this->backprop(this->LayerList[j-1],this->LayerList[j],derive_zero,&weight_offset,&weight_mem,&bias_offset,&bias_mem,&derive_mem);
+
+				//set up the first layer derivatives for the next iteration of the loop
+				derive_zero=derive_mem;
+			}
+	
+		}
+	//average all of the training examples together
+			
+		//we can use the weight offset to avoid computing the weight_mem size again	
+		for (int i = 0;i < weight_offset; i++) //for code clarity here weight_offset=weight_mem.size() 
+		{
+			weight_mem[i]/=data_size;
+		}
+		//same hack as above
+		for (int i = 0; i < bias_offset;i++)
+		{
+			bias_mem[i]/=bias_offset;
+		}
+	//nudge all of the wieghts and biases by the amount that we calculated
+		//jump our offsets to the begining again
+		weight_offset = 0;
+		bias_offset = 0;
+		
+		//TODO: if ever there was a reason to learn how to run c++ in parallell on a gpu it was this hideous for loop	
+		for (int i = 1; i < layer_list_size; i++)
+		{
+			//foreach non input layer
+			for (int j = 0; j < this->LayerList[i].size();j++)
+			{
+				//foreach neuron in that layer
+				
+				//update that neurons bias
+				this->LayerList[i][j].bias+=bias_mem[bias_offset];
+				bias_offset++;
+				
+				for (int k = 0; k < this->LayerList[i][j].cons.size(); k++)
+				{
+					//foreach wieght attached to that neuron
+					
+					//update that wieght
+					this->LayerList[i][j].cons[k].weight+=weight_mem[weight_offset];
+					weight_offset++;				
+				}
+			}
+		}
+	}
 	int ConvNetwork::neuron_count()
 	{
 		int ret_val = 0;
@@ -149,6 +235,8 @@ namespace NNet {
 		this->LayerList = std::vector<std::vector<neuron>>(size);
 		
 		//initilize the first layer of neurons in the convoluted network to have null connections	
+		
+//TODO: find the largest layer here!
 		this->LayerList[0] = std::vector<neuron>(layer_dims[0],{1,0,{}});	
 		for (int i = 1; i < size; i++)
 		{	

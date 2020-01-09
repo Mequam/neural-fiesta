@@ -90,5 +90,8 @@ int main()
 	{
 		std::cout << "[test] the derivatives for the second layer are " << derivative_mem[i] << std::endl;
 	}
+//BEGIN FULL BACKPROPIGATION TESTS *^*
+
+	cn.full_backprop({td1,td2});
 return 0;
 }
