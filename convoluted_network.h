@@ -1,5 +1,10 @@
-#include <vector>
-#include <iostream>
+#include <vector> //unsurprisingly for the vector class
+
+//for generating random numbers to initilize the weights
+#include <stdlib.h> //srand, rand
+#include <time.h> //time
+
+#include <iostream> //for debuging, to be removed when we remove the print statements (although we might use this for file io)
 #include "neuron.h"
 namespace NNet {
 	struct training_data
@@ -83,22 +88,21 @@ namespace NNet {
 			//populate the above list with the initial derivative
 			for (int j = 0; j < first_layer_size; j++)
 			{
-				derive_zero[j] = 2*(this->LayerList[layer_list_size-1][j].activation - data_set[i].wanted_output[j]);
+				derive_zero[j] = 2*(data_set[i].wanted_output[j] - this->LayerList[layer_list_size-1][j].activation);
 			}
 			for (int j = layer_list_size-1;j >= 1;j--)//do not run for the last layer, as they are the input neurons
 			{
 				
-				std::cout << "[fullback] j:" << j << std::endl;
-				//possible TODO: make this use ONE vector that is large enough for every neuron inside of the network
+				
 				//set up the memory that will be used for the next layer list	
-				std::cout << "[fullback] alive" << std::endl;
+			
 				//start at the output layer and work our way to the input layer
 				this->backprop(this->LayerList[j-1],this->LayerList[j],derive_zero,&weight_offset,&weight_mem,&bias_offset,&bias_mem,&derive_mem);
 				
-				std::cout << "[fullback] alive" << std::endl;
+				
 				//set up the first layer derivatives for the next iteration of the loop
 				derive_zero=derive_mem;
-				std::cout << "[fullback] alive" << std::endl;
+				
 			}
 	
 		}
@@ -112,7 +116,7 @@ namespace NNet {
 		//same hack as above
 		for (int i = 0; i < bias_offset;i++)
 		{
-			bias_mem[i]/=bias_offset;
+			bias_mem[i]/=data_size;
 		}
 	//nudge all of the wieghts and biases by the amount that we calculated
 		//jump our offsets to the begining again
@@ -120,7 +124,7 @@ namespace NNet {
 		bias_offset = 0;
 		
 		//TODO: if ever there was a reason to learn how to run c++ in parallell on a gpu it was this hideous for loop	
-		for (int i = 1; i < layer_list_size; i++)
+		for (int i = layer_list_size-1; i >= 1; i--)
 		{
 			//foreach non input layer
 			for (int j = 0; j < this->LayerList[i].size();j++)
@@ -158,21 +162,22 @@ namespace NNet {
 	int *bias_offset,std::vector<double> * biases,
 	std::vector<double>* next_l_derivative)
 	{
-		std::cout << "[convNet] running backpropigation *^*" << std::endl;
+		std::cout << "last derivative: " << (*next_l_derivative)[0] << std::endl;
+		std::cout << "first derivative: " << lf_derivative[0] << std::endl;
 		int lf_size = lf.size();
 		//store how many weights each entry of the first neurons will have
 		int weight_size = ls.size();
-		std::cout << "[convNet] the size of the first layer is " << lf.size() << std::endl;
+		
 		for (int i = 0; i < lf_size;i++)
 		{
 			//store the derivative of the sigmoid function for the neuron that we are looking at
 			double nf_constants = lf[i].ndsig()*lf_derivative[i];
-			std::cout << "[convNet] BIAS setting bias: " << *bias_offset << std::endl;
+	
 			(*biases)[*bias_offset] = nf_constants; //the derivitive of the bias does not care about the weights
 			(*bias_offset)++; //any time we set a bias, imidiatly move to the next bias in the list
 			for (int j = 0; j < weight_size; j++)
 			{	
-				std::cout << "[convNet] previous activation: " << lf[i].cons[j].np->activation << std::endl;	
+				
 				//add the way that we want to nudge the wieght to the wieght total
 				(*weights)[(*weight_offset)] += lf[i].cons[j].np->activation*nf_constants;
 				(*weight_offset)++;//any time that we add to how we want a weight moved, incriment our focus to the next weight
@@ -184,11 +189,13 @@ namespace NNet {
 			double nl_constants = lf[0].cons[i].np->ndsig();
 			for (int j = 0; j < lf_size; j++)
 			{
-				std::cout << "[convNet] checking second layer neuron " << i << " v first neuron " << j << std::endl;
-				std::cout << "[conNet] activation for sl n is:" << lf[0].cons[i].np->activation << " the activation for the fl n is: " << lf[j].activation << std::endl << std::endl;
+				
+				
 				(*next_l_derivative)[i] += lf[j].cons[i].weight*nl_constants*lf_derivative[j];
 			}
 		}
+		
+		std::cout << "last derivative for return: " << (*next_l_derivative)[0] << std::endl;
 	}
 	int ConvNetwork::weight_size()
 	{
@@ -258,6 +265,9 @@ namespace NNet {
 	//this initilizer takes a list of comma seperated layer sizes and generates a neuron to match the criteria	 
 	ConvNetwork::ConvNetwork(std::vector<int> layer_dims)
 	{
+		//seed the random number generator
+		srand(time(NULL));
+
 		int size = layer_dims.size();
 		this->LayerList = std::vector<std::vector<neuron>>(size);
 			
@@ -294,9 +304,7 @@ namespace NNet {
 					{
 						//address of the neron to connect in the previous layer
 						&(this->LayerList[i-1][k]),
-						//random value
-						//TODO: make it ACTUALY random >_>
-						1
+						(double)(rand()%100)/(double)100 
 					};
 				}	
 			}	

@@ -95,6 +95,20 @@ int main()
 	std::cout << "[test] beggining full backpropigation tests!" << std::endl;
 	std::cout << "[test] the largest layer of the network is at index " << cn.get_largest_layer() << std::endl;
 	std::cout << "[test] the size of that layer is " << cn.get_largest_size() << std::endl;	
-	cn.full_backprop({td1,td2});
+	std::cout << std::endl;
+	std::cout << "[test] a wieght in the network is: " << cn.LayerList[1][0].cons[0].weight << std::endl;
+	std::cout << "------------------------" << std::endl;
+	std::cout << "[test] begining full backpropigation test..." << std::endl;
+	
+	for (int i = 0; i < 10000; i++)
+	{
+		cn.full_backprop({td2,td1,td1,td2,td1,td2,td1});
+	}	
+	cn.run({0});
+	std::cout << "{" << cn.LayerList[2][0].activation << "," << cn.LayerList[2][1].activation << "}" << std::endl;
+	
+	cn.run({1});
+	std::cout << "{" << cn.LayerList[2][0].activation << "," << cn.LayerList[2][1].activation << "}" << std::endl;
+	
 return 0;
 }
