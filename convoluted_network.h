@@ -11,17 +11,24 @@ namespace NNet {
 	{
 	
 		int largest_layer;
+		int largest_size;
 		public:	
-		int largest_layer();
+		//getters for the above private variables
+		int get_largest_size();
+		int get_largest_layer();
+		//this list stores all of the neurons for the convoluded network object
 		std::vector<std::vector<neuron>> LayerList;		
 		//this initilizer takes a list of comma seperated layer sizes and generates a neuron to match the criteria
 		ConvNetwork(std::vector<int>);
+
 		//this function sets the activation for each neuron in the network that is not the starting neurons
 		void run(std::vector<double>); //set the initial starting neurons activation to the doubles in this vector 
 		void run();//run with the current activations stored in the starting neurons
+
 		double cost(std::vector<double>); //calculate the cost of the network with the current output neurons FOR A SINGLE VALUE	
 		double cost(training_data); //use the training data to set the network before calculating the cost
 		double trueCost(std::vector<training_data>); //average the cost of multiple training examples together to create the true cost 
+		
 		int weight_size(); //returns how many weights are in the network
 		int neuron_count(); //returns a count of how many neurons are in the network		
 		
@@ -33,6 +40,15 @@ namespace NNet {
 		//this function backpropigates the ENTIRE network
 		void full_backprop(std::vector<training_data>); 
 	};
+//this variable can be got only
+	int ConvNetwork::get_largest_layer()
+	{
+		return this->largest_layer;
+	}
+	int ConvNetwork::get_largest_size()
+	{
+		return this->largest_size;
+	}
 	void ConvNetwork::full_backprop(std::vector<training_data> data_set)
 	{
 		int data_size = data_set.size();
@@ -45,33 +61,44 @@ namespace NNet {
 	//allocate memory that will be used to store how the biases need to be changed
 		std::vector<double> bias_mem(this->neuron_count() - this->LayerList[0].size());
 		int bias_offset = 0;
+		
+
+
+		//create the first derivatives that will begin the chain of backpropigation
+		std::vector<double> derive_zero(this->largest_size);
+		
+		//initilize the memory that will serve as a buffer for the next memory list
+		std::vector<double> derive_mem(this->largest_size);		
 		for (int i = 0; i < data_size; i++)
 		{
 			//foreach training example
 
-
+			//jump to the beginning of the memory that holds the weights and biases for each training example
+			bias_offset = 0;
+			weight_offset = 0;
+	
 			//run the network with the current training data
-			this->run(data_set[i].input_value);
-			//create the first derivatives that will begin the chain of backpropigation
-			std::vector<double> derive_zero(first_layer_size);
+			this->run(data_set[i].input_value);			
+	
 			//populate the above list with the initial derivative
 			for (int j = 0; j < first_layer_size; j++)
 			{
 				derive_zero[j] = 2*(this->LayerList[layer_list_size-1][j].activation - data_set[i].wanted_output[j]);
 			}
-			
-			for (int j = layer_list_size-1;j >= 1;j++)//do not run for the last layer, as they are the input neurons
+			for (int j = layer_list_size-1;j >= 1;j--)//do not run for the last layer, as they are the input neurons
 			{
 				
+				std::cout << "[fullback] j:" << j << std::endl;
 				//possible TODO: make this use ONE vector that is large enough for every neuron inside of the network
-				//set up the memory that will be used for the next layer list
-				std::vector<double> derive_mem(this->LayerList[j-1].size());
-				
+				//set up the memory that will be used for the next layer list	
+				std::cout << "[fullback] alive" << std::endl;
 				//start at the output layer and work our way to the input layer
 				this->backprop(this->LayerList[j-1],this->LayerList[j],derive_zero,&weight_offset,&weight_mem,&bias_offset,&bias_mem,&derive_mem);
-
+				
+				std::cout << "[fullback] alive" << std::endl;
 				//set up the first layer derivatives for the next iteration of the loop
 				derive_zero=derive_mem;
+				std::cout << "[fullback] alive" << std::endl;
 			}
 	
 		}
@@ -233,13 +260,24 @@ namespace NNet {
 	{
 		int size = layer_dims.size();
 		this->LayerList = std::vector<std::vector<neuron>>(size);
+			
 		
-		//initilize the first layer of neurons in the convoluted network to have null connections	
+		//initilize the "king of the hill" that the larger values amoung the neurons will be fighting for
+		this->largest_layer = 1;
+		this->largest_size = layer_dims[1];
+
+//initilize the first layer of neurons in the convoluted network to have null connections	
 		
-//TODO: find the largest layer here!
 		this->LayerList[0] = std::vector<neuron>(layer_dims[0],{1,0,{}});	
 		for (int i = 1; i < size; i++)
 		{	
+			//check to see if the given layer is larger than the other layers
+			if (layer_dims[i] > layer_dims[this->largest_layer])	
+			{
+				this->largest_layer = i;
+				this->largest_size = layer_dims[i];
+			}
+
 			//create a new layer of neurons and add it to the network
 			this->LayerList[i] = std::vector<neuron>(layer_dims[i]);
 				

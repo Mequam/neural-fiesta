@@ -91,7 +91,10 @@ int main()
 		std::cout << "[test] the derivatives for the second layer are " << derivative_mem[i] << std::endl;
 	}
 //BEGIN FULL BACKPROPIGATION TESTS *^*
-
+	std::cout << std::endl;
+	std::cout << "[test] beggining full backpropigation tests!" << std::endl;
+	std::cout << "[test] the largest layer of the network is at index " << cn.get_largest_layer() << std::endl;
+	std::cout << "[test] the size of that layer is " << cn.get_largest_size() << std::endl;	
 	cn.full_backprop({td1,td2});
 return 0;
 }
