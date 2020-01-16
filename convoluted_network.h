@@ -5,6 +5,8 @@
 #include <time.h> //time
 
 #include <iostream> //for debuging, to be removed when we remove the print statements (although we might use this for file io)
+#include <fstream> //for file io
+
 #include "neuron.h"
 namespace NNet {
 	struct training_data
@@ -23,8 +25,13 @@ namespace NNet {
 		int get_largest_layer();
 		//this list stores all of the neurons for the convoluded network object
 		std::vector<std::vector<neuron>> LayerList;		
-		//this initilizer takes a list of comma seperated layer sizes and generates a neuron to match the criteria
-		ConvNetwork(std::vector<int>);
+		
+		//this function takes a list of comma seperated layer sizes and generates a neuron to match the criteria	
+		void init(std::vector<int>);	
+		//this initilizer wraps the above function so it can be used in the creation of a netowrk
+		ConvNetwork(std::vector<int>);	
+		//this initilizer takes a file name and creates the network specified in the file
+		ConvNetwork(char * file);
 
 		//this function sets the activation for each neuron in the network that is not the starting neurons
 		void run(std::vector<double>); //set the initial starting neurons activation to the doubles in this vector 
@@ -43,8 +50,104 @@ namespace NNet {
 			std::vector<double> * weights,int *bias_offset,std::vector<double> * biases,
 			std::vector<double> * next_l_dervative);
 		//this function backpropigates the ENTIRE network
-		void full_backprop(std::vector<training_data>); 
+		void full_backprop(std::vector<training_data>);
+
+		int save(char * file); //this function saves all of the wieghts and biases of the network to the given file 
 	};
+	ConvNetwork::ConvNetwork(char * file)
+	{
+		//create and open the given file
+		std::ifstream in_file;
+		in_file.open(file,std::ios::binary);
+		
+		int int_buff;
+		in_file.read((char *)&int_buff,sizeof(int)); //read in how many layers the network is
+		
+		//initilze the vector that we use with the OTHER constructor 
+		std::vector<int> layer_dims;
+		
+		//this for loop runs int_buff times, and we dont care about the value of i, as such this saves us from declaring another variable	
+		for (int i = int_buff; i > 0; i--) 
+		{
+			//foreach layer
+
+			//read in the size of that layer
+			in_file.read((char*)&int_buff,sizeof(int));
+			
+			//append that size to the network layers that we want		
+			layer_dims.push_back(int_buff);
+		}
+		
+	//initilize a basic network
+	this->init(layer_dims);
+	
+	//now read in all of the wieghts and biases of the network and initilize them	
+		for (int i = 1; i < this->LayerList.size();i++)
+		{
+			//foreach layer in the network
+			 
+			for (int j = 0; j < this->LayerList[i].size();j++)
+			{
+				//foreach neuron in the current layer
+				
+				//read that neurons bias
+				in_file.read((char*)(&this->LayerList[i][j].bias),sizeof(double));
+				
+				for (int k = 0; k < this->LayerList[i][j].cons.size();k++)
+				{
+					//read that neurons connections
+					in_file.read((char*)(&this->LayerList[i][j].cons[k].weight),sizeof(double));
+					
+				}
+			}
+		}
+		in_file.close();
+	}
+	int ConvNetwork::save(char * file)
+	{
+		//open the file name that we are given
+		std::ofstream out_file;
+		out_file.open(file, std::ios::binary);
+		
+		//this variable is what we use to temporaraly store intagers before writing them to the file
+		int buffer = this->LayerList.size(); //initizte it with the first number that we want to store
+		//this variable is used for storing doubles
+		double dblbuff;
+		
+		out_file.write((char*)&buffer,sizeof(int)); //write the LayerList size
+		
+		//foreach layer write that layer size
+		for (int i = 0; i < this->LayerList.size();i++)
+		{
+			buffer = LayerList[i].size();
+			out_file.write((char*)&buffer,sizeof(int));
+		}
+
+	
+		for (int i = 1; i < this->LayerList.size();i++)
+		{
+			//foreach layer in the network EXCEPT the initial layer
+			 
+			for (int j = 0; j < this->LayerList[i].size();j++)
+			{
+				//foreach neuron in the current layer
+			
+				//save that neurons bias
+				dblbuff = this->LayerList[i][j].bias;
+				out_file.write((char*)&dblbuff,sizeof(double));
+				
+				for (int k = 0; k < this->LayerList[i][j].cons.size();k++)
+				{
+					//foreach connection on the current neuron
+			
+					//write the weight of that connection to the file
+					dblbuff = this->LayerList[i][j].cons[k].weight;
+					out_file.write((char*)&dblbuff,sizeof(double));
+				}
+			}
+		}
+		return 1;
+	}
 //this variable can be got only
 	int ConvNetwork::get_largest_layer()
 	{
@@ -162,8 +265,8 @@ namespace NNet {
 	int *bias_offset,std::vector<double> * biases,
 	std::vector<double>* next_l_derivative)
 	{
-		std::cout << "last derivative: " << (*next_l_derivative)[0] << std::endl;
-		std::cout << "first derivative: " << lf_derivative[0] << std::endl;
+		
+		
 		int lf_size = lf.size();
 		//store how many weights each entry of the first neurons will have
 		int weight_size = ls.size();
@@ -195,7 +298,7 @@ namespace NNet {
 			}
 		}
 		
-		std::cout << "last derivative for return: " << (*next_l_derivative)[0] << std::endl;
+		
 	}
 	int ConvNetwork::weight_size()
 	{
@@ -262,8 +365,7 @@ namespace NNet {
 		//update all of the other neurons
 		this->run();
 	}
-	//this initilizer takes a list of comma seperated layer sizes and generates a neuron to match the criteria	 
-	ConvNetwork::ConvNetwork(std::vector<int> layer_dims)
+	void ConvNetwork::init(std::vector<int> layer_dims)
 	{
 		//seed the random number generator
 		srand(time(NULL));
@@ -309,6 +411,14 @@ namespace NNet {
 				}	
 			}	
 		}
+
+	}
+	//this initilizer takes a list of comma seperated layer sizes and generates a neuron to match the criteria	 
+	ConvNetwork::ConvNetwork(std::vector<int> layer_dims)
+	{
+		//this function does the heavy lifting, as we need to be able to call it from the body of other constructors
+		//in the mean time we serve as the constructor for this simple instance
+		this->init(layer_dims);
 	}
 }
 

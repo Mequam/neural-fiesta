@@ -99,16 +99,29 @@ int main()
 	std::cout << "[test] a wieght in the network is: " << cn.LayerList[1][0].cons[0].weight << std::endl;
 	std::cout << "------------------------" << std::endl;
 	std::cout << "[test] begining full backpropigation test..." << std::endl;
-	
 	for (int i = 0; i < 10000; i++)
 	{
 		cn.full_backprop({td2,td1,td1,td2,td1,td2,td1});
-	}	
+	}
+	
 	cn.run({0});
 	std::cout << "{" << cn.LayerList[2][0].activation << "," << cn.LayerList[2][1].activation << "}" << std::endl;
 	
 	cn.run({1});
 	std::cout << "{" << cn.LayerList[2][0].activation << "," << cn.LayerList[2][1].activation << "}" << std::endl;
+
+//BEGIN FILE IO TESTS
+	//write the newly trained neural network to the given file	
+	cn.save("cn.cn");
+
+	//create a new neural network with the given paramaters and see if it outputs the same values
+	NNet::ConvNetwork c2("cn.cn");
+
+	c2.run({0});
+	std::cout << "{" << c2.LayerList[2][0].activation << "," << c2.LayerList[2][1].activation << "}" << std::endl;
 	
+	c2.run({1});
+	std::cout << "{" << c2.LayerList[2][0].activation << "," << c2.LayerList[2][1].activation << "}" << std::endl;
+
 return 0;
 }
