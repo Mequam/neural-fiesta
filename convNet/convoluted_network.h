@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector> //unsurprisingly for the vector class
 
 //for generating random numbers to initilize the weights
