@@ -2,8 +2,9 @@
 #include <fstream>
 #include <string>
 #include <stdint.h>
-
 #include <iostream>
+#include <vector>
+
 #define IDX_BYTESWAPP
 
 namespace NNet {
@@ -28,8 +29,20 @@ namespace NNet {
 			uint32_t colSize();
 			uint32_t imgCount();
 			NNet::training_data getTrainingData();
+
+			std::vector<NNet::training_data> getDataSet(int);
+			
 			void printTd(training_data td);
 	};
+
+	//this function returns a vector of training data for the neral net to use to train
+	std::vector<NNet::training_data> idx::getDataSet(int size=10) {
+		std::vector<NNet::training_data> ret_val;
+		for (int i = 0; i < size; i++) {
+			ret_val.push_back(getTrainingData());
+		}
+		return ret_val;
+	}	
 	//this function outputs a given image to the terminal as ascii artwork for debugging
 	void idx::printTd(training_data td) {
 		int i = 0;	
